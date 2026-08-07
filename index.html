@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lisotech Store - Single File E-Commerce Platform</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background: #f4f4f9; color: #333; line-height: 1.6; }
+        header { background: #111; color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        header .logo { font-size: 1.5rem; font-weight: bold; color: #ffc107; }
+        header nav a { color: #fff; text-decoration: none; margin-left: 20px; font-size: 0.95rem; cursor: pointer; }
+        header nav a:hover { color: #ffc107; }
+        .hero { background: linear-gradient(135deg, #0056b3, #003366); color: #fff; text-align: center; padding: 60px 20px; }
+        .hero h1 { font-size: 2.2rem; margin-bottom: 10px; }
+        .hero p { font-size: 1.1rem; margin-bottom: 20px; opacity: 0.9; }
+        .hero .btn { background: #ffc107; color: #000; margin-top: 10px; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block; cursor: pointer; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
+        .product-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; }
+        .product-card h3 { margin: 15px 0 8px; font-size: 1.2rem; }
+        .product-card p.desc { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
+        .product-card .price { color: #0056b3; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; }
+        .btn { background: #0056b3; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font-size: 0.95rem; }
+        .btn:hover { background: #004085; }
+        .panel { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 550px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 15px; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table th, table td { padding: 12px 15px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.95rem; }
+        table th { background: #f8f9fa; }
+        .badge-success { color: #28a745; font-weight: bold; }
+        .badge-pending { color: #fd7e14; font-weight: bold; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        @media(max-width: 768px) { header { flex-direction: column; gap: 10px; } header nav a { margin: 0 10px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Lisotech Store</div>
+        <nav>
+            <a onclick="switchView('home')">Home</a>
+            <a onclick="switchView('products')">Products</a>
+            <a onclick="switchView('cart')">Cart (<span id="cart-count">0</span>)</a>
+            <a onclick="switchView('admin')">Admin Dashboard</a>
+        </nav>
+    </header>
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view-section active">
+        <section class="hero">
+            <h1>Innovative Tech & Digital Solutions</h1>
+            <p>Shop software solutions, services, and products with instant Mobile Money integration.</p>
+            <a class="btn" onclick="switchView('products')">Explore Catalog</a>
+        </section>
+        <div class="container">
+            <h2>Featured Products & Services</h2>
+            <div class="product-grid" id="featured-grid"></div>
+        </div>
+    </div>
+
+    <!-- PRODUCTS VIEW -->
+    <div id="view-products" class="view-section">
+        <div class="container">
+            <h2>Complete Product Catalog</h2>
+            <div class="product-grid" id="catalog-grid"></div>
+        </div>
+    </div>
+
+    <!-- CART VIEW -->
+    <div id="view-cart" class="view-section">
+        <div class="container">
+            <h2>Your Shopping Cart</h2>
+            <div id="cart-items" style="margin-top: 20px;"></div>
+            <div id="cart-summary" style="display:none; margin-top: 20px; text-align: right;">
+                <h3>Total Amount: ZMW <span id="cart-total">0.00</span></h3>
+                <br>
+                <button class="btn" style="background: #28a745;" onclick="switchView('checkout')">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT VIEW -->
+    <div id="view-checkout" class="view-section">
+        <div class="container">
+            <div class="panel">
+                <h2>Secure Customer Checkout</h2>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:20px;">Enter your mobile details to receive an instant collection prompt.</p>
+                <form id="checkout-form" onsubmit="processCheckout(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="customer_name" required placeholder="Samson Lisomona">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number (Mobile Money)</label>
+                        <input type="text" id="phone_number" required placeholder="26097xxxxxxxx / 26076xxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" required placeholder="client@lisotech.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Network Provider</label>
+                        <select id="payment_method" required>
+                            <option value="airtel">Airtel Money (Zambia)</option>
+                            <option value="mtn">MTN MoMo (Zambia)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; background: #28a745;">Authorize & Pay Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT PROCESSING VIEW -->
+    <div id="view-payment" class="view-section">
+        <div class="container">
+            <div class="panel" style="text-align: center;">
+                <h2>Payment Authorization</h2>
+                <p style="margin: 15px 0;">A payment push prompt has been dispatched to: <strong id="pay-phone"></strong></p>
+                <p style="margin-bottom: 20px;">Total Due: <strong id="pay-amount">ZMW 0.00</strong></p>
+                <p style="font-size: 1.1rem; margin-bottom: 25px;">Status: <span id="payment-status" class="badge-pending">Pending</span></p>
+                <button class="btn" id="return-home" style="display:none;" onclick="switchView('home')">Return to Storefront</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" class="view-section">
+        <div class="container">
+            <div id="admin-login-box" class="panel" style="max-width: 400px;">
+                <h2>Admin Authentication</h2>
+                <p style="color:#666; font-size:0.85rem; margin-top:5px;">Use: admin / password123</p>
+                <form onsubmit="handleAdminLogin(event)" style="margin-top:15px;">
+                    <div class="form-group"><label>Username</label><input type="text" id="admin_user" required value="admin"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="admin_pass" required value="password123"></div>
+                    <button type="submit" class="btn" style="width:100%;">Secure Login</button>
+                </form>
+            </div>
+
+            <div id="admin-dashboard" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Admin Management Dashboard</h2>
+                    <button class="btn" style="background: #dc3545;" onclick="handleAdminLogout()">Logout</button>
+                </div>
+
+                <div style="background: #fff; padding: 25px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <h3>Add New Product or Service</h3>
+                    <form onsubmit="handleAddProduct(event)" style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <input type="text" id="p_name" placeholder="Item Name" required style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="p_desc" placeholder="Description" required style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="number" step="0.01" id="p_price" placeholder="Price (ZMW)" required style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="p_image" placeholder="Image URL (Optional)" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="p_cat" placeholder="Category" value="General" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <button type="submit" class="btn" style="grid-column: 1 / -1;">Save Product</button>
+                    </form>
+                </div>
+
+                <h3>Catalog Management</h3>
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Action</th></tr></thead>
+                    <tbody id="admin-products-table"></tbody>
+                </table>
+
+                <h3 style="margin-top: 40px;">Customer Orders & Payment Records</h3>
+                <table>
+                    <thead><tr><th>Order ID</th><th>Customer Name</th><th>Phone</th><th>Total</th><th>Method</th><th>Status</th></tr></thead>
+                    <tbody id="admin-orders-table">
+                        <tr><td colspan="6" style="text-align:center; color:#777;">No customer orders registered yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // In-Memory Database Initialization
+        let products = JSON.parse(localStorage.getItem('db_products')) || [
+            { id: 1, name: 'Web Development Package', description: 'Professional responsive website setup.', price: 1500.00, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400', category: 'Services' },
+            { id: 2, name: 'Business Registration Support', description: 'PACRA registration assistance in Zambia.', price: 450.00, image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400', category: 'Services' },
+            { id: 3, name: 'Digital Marketing E-Book', description: 'Master Facebook Ads and online growth.', price: 150.00, image: 'https://images.unsplash.com/photo-1533750349077-cdbb2d1a24d0?w=400', category: 'Products' }
+        ];
+
+        let orders = JSON.parse(localStorage.getItem('db_orders')) || [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let adminLogged = localStorage.getItem('admin_logged') === 'true';
+
+        function saveDB() {
+            localStorage.setItem('db_products', JSON.stringify(products));
+            localStorage.setItem('db_orders', JSON.stringify(orders));
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewName).classList.add('active');
+            window.scrollTo(0, 0);
+
+            if (viewName === 'home') renderHome();
+            if (viewName === 'products') renderCatalog();
+            if (viewName === 'cart') renderCartPage();
+            if (viewName === 'admin') renderAdminPanel();
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').innerText = count;
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            alert(product.name + " added to your cart!");
+        }
+
+        function renderHome() {
+            const grid = document.getElementById('featured-grid');
+            grid.innerHTML = products.slice(0, 3).map(p => `
+                <div class="product-card">
+                    <div>
+                        <img src="${p.image}" alt="${p.name}">
+                        <h3>${p.name}</h3>
+                        <p class="desc">${p.description}</p>
+                    </div>
+                    <div>
+                        <p class="price">ZMW ${Number(p.price).toFixed(2)}</p>
+                        <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div>
+                        <img src="${p.image}" alt="${p.name}">
+                        <h3>${p.name}</h3>
+                        <p class="desc">${p.description}</p>
+                    </div>
+                    <div>
+                        <p class="price">ZMW ${Number(p.price).toFixed(2)}</p>
+                        <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCartPage() {
+            const container = document.getElementById('cart-items');
+            const summary = document.getElementById('cart-summary');
+
+            if (cart.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#666;'>Your shopping cart is currently empty.</p>";
+                summary.style.display = 'none';
+                return;
+            }
+
+            let html = `<table><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr>`;
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                html += `<tr>
+                    <td>${item.name}</td>
+                    <td>ZMW ${Number(item.price).toFixed(2)}</td>
+                    <td><input type="number" min="1" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)" style="width:60px; padding:4px;"></td>
+                    <td>ZMW ${itemTotal.toFixed(2)}</td>
+                    <td><button class="btn" style="background:#dc3545; padding:5px 10px;" onclick="removeFromCart(${index})">Remove</button></td>
+                </tr>`;
+            });
+
+            html += `</table>`;
+            container.innerHTML = html;
+            summary.style.display = 'block';
+            document.getElementById('cart-total').innerText = total.toFixed(2);
+        }
+
+        function updateQuantity(index, qty) {
+            cart[index].quantity = parseInt(qty);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCartPage();
+            updateCartCount();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCartPage();
+            updateCartCount();
+        }
+
+        function processCheckout(e) {
+            e.preventDefault();
+            if (cart.length === 0) {
+                alert('Cart is empty.');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderId = Date.now();
+            const newOrder = {
+                id: orderId,
+                customer_name: document.getElementById('customer_name').value,
+                phone_number: document.getElementById('phone_number').value,
+                email: document.getElementById('email').value,
+                total_amount: total,
+                payment_method: document.getElementById('payment_method').value,
+                payment_status: 'Pending'
+            };
+
+            orders.unshift(newOrder);
+            saveDB();
+
+            // Setup payment status screen
+            document.getElementById('pay-phone').innerText = newOrder.phone_number;
+            document.getElementById('pay-amount').innerText = 'ZMW ' + total.toFixed(2);
+            document.getElementById('payment-status').innerText = 'Pending';
+            document.getElementById('payment-status').className = 'badge-pending';
+            document.getElementById('return-home').style.display = 'none';
+
+            switchView('payment');
+
+            // Simulate Gateway Push & Automatic Callback Verification after 3 seconds
+            setTimeout(() => {
+                const targetOrder = orders.find(o => o.id === orderId);
+                if (targetOrder) {
+                    targetOrder.payment_status = 'Successful';
+                    saveDB();
+                    document.getElementById('payment-status').innerText = 'Successful';
+                    document.getElementById('payment-status').className = 'badge-success';
+                    document.getElementById('return-home').style.display = 'inline-block';
+                    localStorage.removeItem('cart');
+                    cart = [];
+                    updateCartCount();
+                }
+            }, 3000);
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('admin_user').value;
+            const p = document.getElementById('admin_pass').value;
+            if (u === 'admin' && p === 'password123') {
+                adminLogged = true;
+                localStorage.setItem('admin_logged', 'true');
+                renderAdminPanel();
+            } else {
+                alert('Invalid credentials. Use admin / password123');
+            }
+        }
+
+        function handleAdminLogout() {
+            adminLogged = false;
+            localStorage.removeItem('admin_logged');
+            renderAdminPanel();
+        }
+
+        function handleAddProduct(e) {
+            e.preventDefault();
+            const newProd = {
+                id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
+                name: document.getElementById('p_name').value,
+                description: document.getElementById('p_desc').value,
+                price: parseFloat(document.getElementById('p_price').value),
+                image: document.getElementById('p_image').value || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+                category: document.getElementById('p_cat').value
+            };
+            products.unshift(newProd);
+            saveDB();
+            renderAdminPanel();
+            e.target.reset();
+            alert('Product added successfully!');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Delete this product?')) {
+                products = products.filter(p => p.id !== id);
+                saveDB();
+                renderAdminPanel();
+            }
+        }
+
+        function renderAdminPanel() {
+            const loginBox = document.getElementById('admin-login-box');
+            const dash = document.getElementById('admin-dashboard');
+
+            if (!adminLogged) {
+                loginBox.style.display = 'block';
+                dash.style.display = 'none';
+                return;
+            }
+
+            loginBox.style.display = 'none';
+            dash.style.display = 'block';
+
+            // Render Products Table
+            const prodTable = document.getElementById('admin-products-table');
+            prodTable.innerHTML = products.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>ZMW ${Number(p.price).toFixed(2)}</td>
+                    <td><button class="btn" style="background:#dc3545; padding:5px 10px;" onclick="deleteProduct(${p.id})">Delete</button></td>
+                </tr>
+            `).join('');
+
+            // Render Orders Table
+            const ordTable = document.getElementById('admin-orders-table');
+            if (orders.length === 0) {
+                ordTable.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">No customer orders registered yet.</td></tr>`;
+            } else {
+                ordTable.innerHTML = orders.map(o => `
+                    <tr>
+                        <td>${o.id}</td>
+                        <td>${o.customer_name}</td>
+                        <td>${o.phone_number}</td>
+                        <td>ZMW ${Number(o.total_amount).toFixed(2)}</td>
+                        <td>${o.payment_method.toUpperCase()}</td>
+                        <td><span class="${o.payment_status === 'Successful' ? 'badge-success' : 'badge-pending'}">${o.payment_status}</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Initialize App State
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartCount();
+            renderHome();
+        });
+    </script>
+</body>
+</html>
