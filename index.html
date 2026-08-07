@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lisotech Store - Single File E-Commerce Platform</title>
+    <title>Lisotech Store - Secure E-Commerce Platform</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background: #f4f4f9; color: #333; line-height: 1.6; }
@@ -35,10 +35,36 @@
         .badge-pending { color: #fd7e14; font-weight: bold; }
         .view-section { display: none; }
         .view-section.active { display: block; }
+        
+        /* Push Notification Banner Style */
+        #push-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            max-width: 350px;
+            animation: slideIn 0.3s ease-out;
+        }
+        #push-notification h4 { margin-bottom: 5px; font-size: 1rem; display: flex; justify-content: space-between; }
+        #push-notification p { font-size: 0.9rem; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
         @media(max-width: 768px) { header { flex-direction: column; gap: 10px; } header nav a { margin: 0 10px; } }
     </style>
 </head>
 <body>
+
+    <!-- Push Notification Container -->
+    <div id="push-notification">
+        <h4 id="push-title">Notification <span style="cursor:pointer;" onclick="hidePush()">×</span></h4>
+        <p id="push-message">Message body goes here...</p>
+    </div>
 
     <header>
         <div class="logo">Lisotech Store</div>
@@ -134,10 +160,10 @@
         <div class="container">
             <div id="admin-login-box" class="panel" style="max-width: 400px;">
                 <h2>Admin Authentication</h2>
-                <p style="color:#666; font-size:0.85rem; margin-top:5px;">Use: admin / password123</p>
+                <p style="color:#666; font-size:0.85rem; margin-top:5px;">Please log in securely with your credentials.</p>
                 <form onsubmit="handleAdminLogin(event)" style="margin-top:15px;">
-                    <div class="form-group"><label>Username</label><input type="text" id="admin_user" required value="admin"></div>
-                    <div class="form-group"><label>Password</label><input type="password" id="admin_pass" required value="password123"></div>
+                    <div class="form-group"><label>Username</label><input type="text" id="admin_user" required placeholder="Enter username"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="admin_pass" required placeholder="Enter password"></div>
                     <button type="submit" class="btn" style="width:100%;">Secure Login</button>
                 </form>
             </div>
@@ -178,7 +204,7 @@
     </div>
 
     <script>
-        // In-Memory Database Initialization
+        // Database Initialization
         let products = JSON.parse(localStorage.getItem('db_products')) || [
             { id: 1, name: 'Web Development Package', description: 'Professional responsive website setup.', price: 1500.00, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400', category: 'Services' },
             { id: 2, name: 'Business Registration Support', description: 'PACRA registration assistance in Zambia.', price: 450.00, image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400', category: 'Services' },
@@ -221,7 +247,7 @@
             }
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartCount();
-            alert(product.name + " added to your cart!");
+            showPush("Cart Updated", product.name + " added to your cart!");
         }
 
         function renderHome() {
@@ -334,7 +360,7 @@
 
             switchView('payment');
 
-            // Simulate Gateway Push & Automatic Callback Verification after 3 seconds
+            // Simulate Gateway Push & Automatic Successful Transaction Push Notification after 3 seconds
             setTimeout(() => {
                 const targetOrder = orders.find(o => o.id === orderId);
                 if (targetOrder) {
@@ -346,20 +372,38 @@
                     localStorage.removeItem('cart');
                     cart = [];
                     updateCartCount();
+
+                    // Trigger Push Notification for successful payment
+                    showPush("Payment Successful!", `Order #${orderId} of ZMW ${total.toFixed(2)} received from ${targetOrder.customer_name}.`);
                 }
             }, 3000);
+        }
+
+        function showPush(title, message) {
+            const push = document.getElementById('push-notification');
+            document.getElementById('push-title').innerHTML = title + ` <span style="cursor:pointer;" onclick="hidePush()">×</span>`;
+            document.getElementById('push-message').innerText = message;
+            push.style.display = 'block';
+            setTimeout(() => { hidePush(); }, 6000);
+        }
+
+        function hidePush() {
+            document.getElementById('push-notification').style.display = 'none';
         }
 
         function handleAdminLogin(e) {
             e.preventDefault();
             const u = document.getElementById('admin_user').value;
             const p = document.getElementById('admin_pass').value;
-            if (u === 'admin' && p === 'password123') {
+            
+            // Credentials enforcement: username 'admin' and password '2566'
+            if (u === 'admin' && p === '2566') {
                 adminLogged = true;
                 localStorage.setItem('admin_logged', 'true');
                 renderAdminPanel();
+                showPush("Admin Access", "Successfully logged into dashboard.");
             } else {
-                alert('Invalid credentials. Use admin / password123');
+                alert('Invalid username or password.');
             }
         }
 
@@ -367,6 +411,7 @@
             adminLogged = false;
             localStorage.removeItem('admin_logged');
             renderAdminPanel();
+            showPush("Logged Out", "You have been logged out of the admin panel.");
         }
 
         function handleAddProduct(e) {
@@ -383,7 +428,7 @@
             saveDB();
             renderAdminPanel();
             e.target.reset();
-            alert('Product added successfully!');
+            showPush("Catalog Updated", "New product successfully added.");
         }
 
         function deleteProduct(id) {
@@ -391,6 +436,7 @@
                 products = products.filter(p => p.id !== id);
                 saveDB();
                 renderAdminPanel();
+                showPush("Catalog Updated", "Product successfully removed.");
             }
         }
 
